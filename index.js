@@ -17,7 +17,7 @@ const io = new Server(server, {
     }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 const CONFIG_FILE = '/var/data/config.json'; // Path for Railway Persistent Disk
 
 let CONFIG = {
