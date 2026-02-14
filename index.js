@@ -76,4 +76,6 @@ function startScheduler() {
 }
 
 client.initialize();
-server.listen(PORT, () => console.log(`Server on port ${PORT}`));
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Real server listening on port ${PORT}`);
+});
