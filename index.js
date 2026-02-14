@@ -10,16 +10,18 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
-// Use the PORT Railway gives us, or default to 8080
+// Use Railway PORT or default
 const PORT = process.env.PORT || 8080;
 
-// 1. APPLY GLOBAL CORS
+/* =========================
+   CORS CONFIG
+========================= */
+
 app.use(cors({
     origin: "https://time-lesswill.netlify.app",
     credentials: true
 }));
 
-// 2. APPLY SOCKET.IO CORS (No trailing slash on origin!)
 const io = new Server(server, {
     cors: {
         origin: "https://time-lesswill.netlify.app",
@@ -30,12 +32,15 @@ const io = new Server(server, {
     transports: ['websocket', 'polling']
 });
 
+/* =========================
+   FILE STORAGE
+========================= */
+
 const DATA_DIR = '/var/data';
 const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 
-// Ensure directory exists
-if (!fs.existsSync(DATA_DIR)) { 
-    fs.mkdirSync(DATA_DIR, { recursive: true }); 
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
 let CONFIG = {
@@ -48,9 +53,13 @@ if (fs.existsSync(CONFIG_FILE)) {
     CONFIG = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
 }
 
+/* =========================
+   WHATSAPP CLIENT
+========================= */
+
 const client = new Client({
-    authStrategy: new LocalAuth({ 
-        dataPath: path.join(DATA_DIR, 'auth') 
+    authStrategy: new LocalAuth({
+        dataPath: path.join(DATA_DIR, 'auth')
     }),
     puppeteer: {
         headless: true,
@@ -60,45 +69,58 @@ const client = new Client({
             '--disable-dev-shm-usage',
             '--disable-gpu',
             '--no-zygote',
-            '--single-process' // Helps in restricted container environments
+            '--single-process'
         ],
-        // This is key: it tells Puppeteer where to find Chromium in your Docker setup
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium'
+        executablePath:
+            process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium'
     }
 });
+
+/* =========================
+   SOCKET CONNECTION
+========================= */
 
 io.on('connection', (socket) => {
     console.log('🔌 UI connected');
     socket.emit('config', CONFIG);
-    
-   socket.on('updateConfig', (newConfig) => {
-    // 1. Assume the incoming hour/minute is IST
-    let istHour = parseInt(newConfig.scheduledTime.hour);
-    let istMinute = parseInt(newConfig.scheduledTime.minute);
 
-    // 2. Convert IST to UTC (IST is UTC + 5:30, so we subtract)
-    let utcHour = istHour - 5;
-    let utcMinute = istMinute - 30;
+    socket.on('updateConfig', (newConfig) => {
 
-    // 3. Handle underflow (if minutes/hours go negative)
-    if (utcMinute < 0) {
-        utcMinute += 60;
-        utcHour -= 1;
-    }
-    if (utcHour < 0) {
-        utcHour += 24;
-    }
+        let istHour = parseInt(newConfig.scheduledTime.hour);
+        let istMinute = parseInt(newConfig.scheduledTime.minute);
 
-    // 4. Update the config with the relative UTC values
-    // We store the original IST for the UI and the UTC for the backend logic
-    CONFIG = {
-        ...newConfig,
-        utcScheduledTime: { hour: utcHour, minute: utcMinute } 
-    };
+        // Convert IST (UTC+5:30) → UTC
+        let utcHour = istHour - 5;
+        let utcMinute = istMinute - 30;
 
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(CONFIG));
-    console.log(`⚙️ Config Updated. IST: ${istHour}:${istMinute} -> UTC: ${utcHour}:${utcMinute}`);
+        if (utcMinute < 0) {
+            utcMinute += 60;
+            utcHour -= 1;
+        }
+
+        if (utcHour < 0) {
+            utcHour += 24;
+        }
+
+        CONFIG = {
+            ...newConfig,
+            utcScheduledTime: {
+                hour: utcHour,
+                minute: utcMinute
+            }
+        };
+
+        fs.writeFileSync(CONFIG_FILE, JSON.stringify(CONFIG));
+
+        console.log(
+            `⚙️ Config Updated. IST: ${istHour}:${istMinute} → UTC: ${utcHour}:${utcMinute}`
+        );
+    });
 });
+
+/* =========================
+   WHATSAPP EVENTS
+========================= */
 
 client.on('qr', async (qr) => {
     try {
@@ -106,7 +128,7 @@ client.on('qr', async (qr) => {
         io.emit('qr', url);
         console.log('📤 QR Sent');
     } catch (err) {
-        console.error('QR Error', err);
+        console.error('QR Error:', err);
     }
 });
 
@@ -115,12 +137,15 @@ client.on('ready', () => {
     io.emit('ready');
 });
 
-// Function to clear Puppeteer lock files
+/* =========================
+   LOCK CLEANUP
+========================= */
+
 const clearLocks = () => {
     const lockPath = path.join(DATA_DIR, 'auth', 'Default', 'SingletonLock');
     const cookieLockPath = path.join(DATA_DIR, 'auth', 'Default', 'Cookies-journal');
-    
-    [lockPath, cookieLockPath].forEach(p => {
+
+    [lockPath, cookieLockPath].forEach((p) => {
         if (fs.existsSync(p)) {
             try {
                 fs.unlinkSync(p);
@@ -132,13 +157,18 @@ const clearLocks = () => {
     });
 };
 
-// Run the cleanup
 clearLocks();
 
-// NOW initialize
+/* =========================
+   INITIALIZE CLIENT
+========================= */
+
 client.initialize();
 
-// 3. FORCE BINDING TO 0.0.0.0
+/* =========================
+   START SERVER
+========================= */
+
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
