@@ -1,0 +1,33 @@
+# Dependency directories
+node_modules/
+
+# WhatsApp Web JS internal folders
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Environment variables and configs
+.env
+config.json
+
+# Local data and history
+query_history.json
+index.demo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+desktop.ini
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
