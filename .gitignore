@@ -31,3 +31,9 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+node_modules/
+.wwebjs_auth/
+.wwebjs_cache/
+auth/
+config.json
+.env
