@@ -93,6 +93,27 @@ client.on('ready', () => {
     io.emit('ready');
 });
 
+// Function to clear Puppeteer lock files
+const clearLocks = () => {
+    const lockPath = path.join(DATA_DIR, 'auth', 'Default', 'SingletonLock');
+    const cookieLockPath = path.join(DATA_DIR, 'auth', 'Default', 'Cookies-journal');
+    
+    [lockPath, cookieLockPath].forEach(p => {
+        if (fs.existsSync(p)) {
+            try {
+                fs.unlinkSync(p);
+                console.log(`🗑️ Removed old lock: ${p}`);
+            } catch (e) {
+                console.error(`Could not remove lock: ${p}`, e);
+            }
+        }
+    });
+};
+
+// Run the cleanup
+clearLocks();
+
+// NOW initialize
 client.initialize();
 
 // 3. FORCE BINDING TO 0.0.0.0
