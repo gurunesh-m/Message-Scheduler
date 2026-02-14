@@ -71,11 +71,33 @@ io.on('connection', (socket) => {
     console.log('🔌 UI connected');
     socket.emit('config', CONFIG);
     
-    socket.on('updateConfig', (newConfig) => {
-        CONFIG = newConfig;
-        fs.writeFileSync(CONFIG_FILE, JSON.stringify(CONFIG));
-        console.log('⚙️ Config Updated');
-    });
+   socket.on('updateConfig', (newConfig) => {
+    // 1. Assume the incoming hour/minute is IST
+    let istHour = parseInt(newConfig.scheduledTime.hour);
+    let istMinute = parseInt(newConfig.scheduledTime.minute);
+
+    // 2. Convert IST to UTC (IST is UTC + 5:30, so we subtract)
+    let utcHour = istHour - 5;
+    let utcMinute = istMinute - 30;
+
+    // 3. Handle underflow (if minutes/hours go negative)
+    if (utcMinute < 0) {
+        utcMinute += 60;
+        utcHour -= 1;
+    }
+    if (utcHour < 0) {
+        utcHour += 24;
+    }
+
+    // 4. Update the config with the relative UTC values
+    // We store the original IST for the UI and the UTC for the backend logic
+    CONFIG = {
+        ...newConfig,
+        utcScheduledTime: { hour: utcHour, minute: utcMinute } 
+    };
+
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(CONFIG));
+    console.log(`⚙️ Config Updated. IST: ${istHour}:${istMinute} -> UTC: ${utcHour}:${utcMinute}`);
 });
 
 client.on('qr', async (qr) => {
