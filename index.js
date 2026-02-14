@@ -25,9 +25,13 @@ app.use(cors({
 const io = new Server(server, {
     cors: {
         origin: "https://time-lesswill.netlify.app",
+        methods: ["GET", "POST"],
         credentials: true
-    }
+    },
+    transports: ["polling", "websocket"], // ← CRITICAL
+    allowEIO3: true
 });
+
 
 const DATA_DIR = "/var/data";
 const AUTH_DIR = path.join(DATA_DIR, "auth");
