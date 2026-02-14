@@ -1,612 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Automator</title>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;900&display=swap');
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WhatsApp Automator</title>
 
-        :root {
-            --bg: #F0F0F0;
-            --primary: #FF3B30;
-            /* Bright Red */
-            --secondary: #FFD600;
-            /* Bright Yellow */
-            --accent: #007AFF;
-            /* Bright Blue */
-            --wa-green: #25D366;
-            /* WhatsApp Green */
-            --wa-dark: #075E54;
-            --black: #000000;
-            --white: #FFFFFF;
-            --border: 4px;
-        }
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Public Sans', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg);
-            background-image: radial-gradient(var(--black) 1px, transparent 0);
-            background-size: 30px 30px;
-            color: var(--black);
-            padding: 40px 20px;
-            display: flex;
-            justify-content: center;
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
-
-        /* Animations */
-        @keyframes float {
-            0% {
-                transform: translateY(0px) rotate(0deg);
-            }
-
-            50% {
-                transform: translateY(-10px) rotate(5deg);
-            }
-
-            100% {
-                transform: translateY(0px) rotate(0deg);
-            }
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.1);
-                opacity: 0.8;
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        @keyframes marquee {
-            0% {
-                transform: translateX(100%);
-            }
-
-            100% {
-                transform: translateX(-100%);
-            }
-        }
-
-        .container {
-            max-width: 1000px;
-            width: 100%;
-            display: grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 40px;
-            position: relative;
-            z-index: 1;
-        }
-
-        @media (max-width: 850px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .header-area {
-            grid-column: 1 / -1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            font-weight: 900;
-            font-size: clamp(2rem, 8vw, 4rem);
-            text-transform: uppercase;
-            background: var(--wa-green);
-            display: inline-block;
-            padding: 10px 20px;
-            border: var(--border) solid var(--black);
-            box-shadow: 12px 12px 0px var(--black);
-            transform: rotate(-1deg);
-            transition: all 0.2s;
-        }
-
-        h1:hover {
-            transform: rotate(0deg) scale(1.02);
-            box-shadow: 16px 16px 0px var(--black);
-        }
-
-        .sticker {
-            position: absolute;
-            z-index: -1;
-            filter: drop-shadow(4px 4px 0px black);
-            animation: float 4s ease-in-out infinite;
-        }
-
-        .sticker-1 {
-            top: -20px;
-            right: 10%;
-            width: 80px;
-        }
-
-        .sticker-2 {
-            bottom: 10%;
-            left: -50px;
-            width: 100px;
-            animation-delay: 1s;
-        }
-
-        .sticker-3 {
-            top: 40%;
-            right: -30px;
-            width: 60px;
-            animation-delay: 2s;
-        }
-
-        .card {
-            background: var(--white);
-            border: var(--border) solid var(--black);
-            box-shadow: 12px 12px 0px var(--black);
-            padding: 24px;
-            position: relative;
-            transition: transform 0.2s;
-        }
-
-        .card:hover {
-            transform: translate(-4px, -4px);
-            box-shadow: 16px 16px 0px var(--black);
-        }
-
-        .card-title {
-            font-weight: 900;
-            font-size: 1.6rem;
-            text-transform: uppercase;
-            margin-bottom: 24px;
-            border-bottom: var(--border) solid var(--black);
-            padding-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-title::before {
-            content: '';
-            display: block;
-            width: 15px;
-            height: 15px;
-            background: var(--wa-green);
-            border: 2px solid var(--black);
-        }
-
-        #qr-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 320px;
-            background: #f9f9f9;
-            border: var(--border) solid var(--black);
-            margin-top: 10px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #qr-code {
-            max-width: 90%;
-            height: auto;
-            border: 4px solid var(--black);
-            z-index: 2;
-        }
-
-        #qr-status {
-            margin-top: 15px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            background: var(--secondary);
-            padding: 5px 15px;
-            border: 2px solid var(--black);
-        }
-
-        .input-group {
-            margin-bottom: 24px;
-        }
-
-        label {
-            display: block;
-            font-weight: 900;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-        }
-
-        input,
-        textarea {
-            width: 100%;
-            padding: 14px;
-            border: var(--border) solid var(--black);
-            font-size: 1.1rem;
-            font-weight: 800;
-            outline: none;
-            background: var(--white);
-            transition: all 0.1s;
-        }
-
-        input:focus,
-        textarea:focus {
-            background: #f0fff4;
-            box-shadow: 6px 6px 0px var(--wa-green);
-            transform: translate(-2px, -2px);
-        }
-
-        button {
-            cursor: pointer;
-            padding: 16px 32px;
-            font-weight: 900;
-            font-size: 1.3rem;
-            text-transform: uppercase;
-            border: var(--border) solid var(--black);
-            box-shadow: 8px 8px 0px var(--black);
-            transition: all 0.1s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        button:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 10px 10px 0px var(--black);
-        }
-
-        button:active {
-            transform: translate(4px, 4px);
-            box-shadow: 2px 2px 0px var(--black);
-        }
-
-        #save-btn {
-            background: var(--wa-green);
-            color: var(--black);
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            font-weight: 900;
-            border: var(--border) solid var(--black);
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            box-shadow: 4px 4px 0px var(--black);
-        }
-
-        .status-ready {
-            background: var(--wa-green);
-        }
-
-        .status-waiting {
-            background: var(--secondary);
-        }
-
-        .status-disconnected {
-            background: var(--primary);
-        }
-
-        .status-pulse {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: currentColor;
-            border: 2px solid var(--black);
-            animation: pulse 1.5s infinite;
-        }
-
-        .time-inputs {
-            display: flex;
-            gap: 15px;
-        }
-
-        .time-box {
-            position: relative;
-            flex: 1;
-        }
-
-        .time-box::after {
-            content: attr(data-label);
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-weight: 900;
-            color: #888;
-            pointer-events: none;
-        }
-
-        small {
-            display: block;
-            margin-top: 8px;
-            font-weight: 700;
-            color: #555;
-            background: #eee;
-            padding: 4px 8px;
-            border: 2px solid #000;
-            display: inline-block;
-        }
-
-        .live-tag {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: var(--primary);
-            color: white;
-            padding: 2px 8px;
-            font-weight: 900;
-            font-size: 0.7rem;
-            border: 2px solid var(--black);
-            z-index: 10;
-        }
-    </style>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;900&display=swap'); :root { --bg: #F0F0F0; --primary: #FF3B30; /* Bright Red */ --secondary: #FFD600; /* Bright Yellow */ --accent: #007AFF; /* Bright Blue */ --wa-green: #25D366; /* WhatsApp Green */ --wa-dark: #075E54; --black: #000000; --white: #FFFFFF; --border: 4px; } * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Public Sans', sans-serif; } body { background-color: var(--bg); background-image: radial-gradient(var(--black) 1px, transparent 0); background-size: 30px 30px; color: var(--black); padding: 40px 20px; display: flex; justify-content: center; overflow-x: hidden; min-height: 100vh; } /* Animations */ @keyframes float { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-10px) rotate(5deg); } 100% { transform: translateY(0px) rotate(0deg); } } @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } } @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } } .container { max-width: 1000px; width: 100%; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; position: relative; z-index: 1; } @media (max-width: 850px) { .container { grid-template-columns: 1fr; } } .header-area { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; } h1 { font-weight: 900; font-size: clamp(2rem, 8vw, 4rem); text-transform: uppercase; background: var(--wa-green); display: inline-block; padding: 10px 20px; border: var(--border) solid var(--black); box-shadow: 12px 12px 0px var(--black); transform: rotate(-1deg); transition: all 0.2s; } h1:hover { transform: rotate(0deg) scale(1.02); box-shadow: 16px 16px 0px var(--black); } .sticker { position: absolute; z-index: -1; filter: drop-shadow(4px 4px 0px black); animation: float 4s ease-in-out infinite; } .sticker-1 { top: -20px; right: 10%; width: 80px; } .sticker-2 { bottom: 10%; left: -50px; width: 100px; animation-delay: 1s; } .sticker-3 { top: 40%; right: -30px; width: 60px; animation-delay: 2s; } .card { background: var(--white); border: var(--border) solid var(--black); box-shadow: 12px 12px 0px var(--black); padding: 24px; position: relative; transition: transform 0.2s; } .card:hover { transform: translate(-4px, -4px); box-shadow: 16px 16px 0px var(--black); } .card-title { font-weight: 900; font-size: 1.6rem; text-transform: uppercase; margin-bottom: 24px; border-bottom: var(--border) solid var(--black); padding-bottom: 8px; display: flex; align-items: center; gap: 10px; } .card-title::before { content: ''; display: block; width: 15px; height: 15px; background: var(--wa-green); border: 2px solid var(--black); } #qr-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 320px; background: #f9f9f9; border: var(--border) solid var(--black); margin-top: 10px; position: relative; overflow: hidden; } #qr-code { max-width: 90%; height: auto; border: 4px solid var(--black); z-index: 2; } #qr-status { margin-top: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; background: var(--secondary); padding: 5px 15px; border: 2px solid var(--black); } .input-group { margin-bottom: 24px; } label { display: block; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; font-size: 1.1rem; } input, textarea { width: 100%; padding: 14px; border: var(--border) solid var(--black); font-size: 1.1rem; font-weight: 800; outline: none; background: var(--white); transition: all 0.1s; } input:focus, textarea:focus { background: #f0fff4; box-shadow: 6px 6px 0px var(--wa-green); transform: translate(-2px, -2px); } button { cursor: pointer; padding: 16px 32px; font-weight: 900; font-size: 1.3rem; text-transform: uppercase; border: var(--border) solid var(--black); box-shadow: 8px 8px 0px var(--black); transition: all 0.1s; display: inline-flex; align-items: center; justify-content: center; gap: 10px; } button:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0px var(--black); } button:active { transform: translate(4px, 4px); box-shadow: 2px 2px 0px var(--black); } #save-btn { background: var(--wa-green); color: var(--black); width: 100%; margin-top: 10px; } .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; font-weight: 900; border: var(--border) solid var(--black); margin-bottom: 20px; text-transform: uppercase; box-shadow: 4px 4px 0px var(--black); } .status-ready { background: var(--wa-green); } .status-waiting { background: var(--secondary); } .status-disconnected { background: var(--primary); } .status-pulse { width: 12px; height: 12px; border-radius: 50%; background: currentColor; border: 2px solid var(--black); animation: pulse 1.5s infinite; } .time-inputs { display: flex; gap: 15px; } .time-box { position: relative; flex: 1; } .time-box::after { content: attr(data-label); position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-weight: 900; color: #888; pointer-events: none; } small { display: block; margin-top: 8px; font-weight: 700; color: #555; background: #eee; padding: 4px 8px; border: 2px solid #000; display: inline-block; } .live-tag { position: absolute; top: 10px; right: 10px; background: var(--primary); color: white; padding: 2px 8px; font-weight: 900; font-size: 0.7rem; border: 2px solid var(--black); z-index: 10; }
+</style>
 </head>
 
 <body>
-    <!-- Background Decoration Stickers -->
-    <svg class="sticker sticker-1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 0L61.2 38.8H100L68.6 61.2L79.8 100L50 77.6L20.2 100L31.4 61.2L0 38.8H38.8L50 0Z"
-            fill="var(--secondary)" stroke="black" stroke-width="4" />
-    </svg>
-    <svg class="sticker sticker-2" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="40" fill="var(--wa-green)" stroke="black" stroke-width="4" />
-        <path d="M30 40Q50 60 70 40" stroke="black" stroke-width="4" fill="none" stroke-linecap="round" />
-    </svg>
-    <svg class="sticker sticker-3" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <rect x="20" y="20" width="60" height="60" fill="var(--accent)" stroke="black" stroke-width="4"
-            transform="rotate(15 50 50)" />
-    </svg>
 
-    <div class="container">
-        <div class="header-area">
-            <h1>Timeless Will</h1>
+<div class="container">
+    <h1>Timeless Will</h1>
+
+    <div class="card">
+        <div id="status-badge" class="status-badge status-disconnected">
+            <div class="status-pulse"></div>
+            <span id="status-text">DISCONNECTED</span>
         </div>
 
-        <!-- Left Column: Status and QR -->
-        <div class="card">
-            <div class="live-tag">LIVE UPDATES</div>
-            <div class="card-title">Device Connection</div>
-
-            <div id="status-badge" class="status-badge status-disconnected">
-                <div class="status-pulse"></div>
-                <span id="status-text">DISCONNECTED</span>
-            </div>
-
-            <div id="qr-section">
-                <label>WhatsApp Link QR</label>
-                <div id="qr-container">
-                    <img id="qr-code" src="" alt="QR Code" style="display:none;">
-                    <div id="qr-placeholder" style="font-weight: 900; text-transform: uppercase;">Initializing System...
-                    </div>
-                </div>
-                <div id="qr-status">Ready for configuration</div>
-            </div>
+        <label>WhatsApp QR</label>
+        <div id="qr-container">
+            <img id="qr-code" style="display:none" />
+            <div id="qr-placeholder">Waiting for QR...</div>
         </div>
-
-        <!-- Right Column: Settings -->
-        <div class="card">
-            <div class="card-title">Automation Control</div>
-
-            <div class="input-group">
-                <label>Target Contacts</label>
-                <div id="contacts-list">
-                    <!-- Dynamic phone inputs -->
-                </div>
-                <small>⚡ Default Region: +91 (India)</small>
-            </div>
-
-            <div class="input-group">
-                <label for="message">Broadcast Message</label>
-                <textarea id="message" rows="4" placeholder="Enter your text here..."></textarea>
-            </div>
-
-            <div class="input-group">
-                <label>Execution Time</label>
-                <div class="time-inputs">
-                    <div class="time-box" data-label="HR">
-                        <input type="number" id="hour" min="1" max="12" placeholder="08">
-                    </div>
-                    <div class="time-box" data-label="MIN">
-                        <input type="number" id="minute" min="0" max="59" placeholder="00">
-                    </div>
-                    <div style="flex: 0.8;">
-                        <select id="ampm"
-                            style="width: 100%; padding: 14px; border: var(--border) solid var(--black); font-size: 1.1rem; font-weight: 800; outline: none; background: var(--white); cursor: pointer; appearance: none; box-shadow: 4px 4px 0px var(--black);">
-                            <option value="AM">AM</option>
-                            <option value="PM">PM</option>
-                        </select>
-                    </div>
-                </div>
-                <small>🕒 12-Hour Format (AM/PM)</small>
-            </div>
-
-            <button id="save-btn">
-                <span>Save & Activate</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-            </button>
-        </div>
+        <div id="qr-status">Idle</div>
     </div>
 
-    <script>
-        // 1. Corrected URL with Protocol and CORS Handshake settings
+    <div class="card">
+        <label>Contacts</label>
+        <div id="contacts-list"></div>
+
+        <label>Message</label>
+        <textarea id="message"></textarea>
+
+        <label>Time</label>
+        <input id="hour" type="number" min="1" max="12" />
+        <input id="minute" type="number" min="0" max="59" />
+        <select id="ampm">
+            <option>AM</option>
+            <option>PM</option>
+        </select>
+
+        <button id="save-btn">Save & Activate</button>
+    </div>
+</div>
+
+<script>
 const socket = io("https://message-scheduler-production.up.railway.app", {
-    transports: ['websocket', 'polling'],
+    transports: ["websocket"],
     withCredentials: true
 });
 
-const qrImg = document.getElementById('qr-code');
-const qrPlaceholder = document.getElementById('qr-placeholder');
-const qrStatus = document.getElementById('qr-status');
-const statusBadge = document.getElementById('status-badge');
-const statusText = document.getElementById('status-text');
+const qrImg = document.getElementById("qr-code");
+const qrPlaceholder = document.getElementById("qr-placeholder");
+const qrStatus = document.getElementById("qr-status");
+const statusText = document.getElementById("status-text");
+const statusBadge = document.getElementById("status-badge");
 
-const contactsList = document.getElementById('contacts-list');
-const messageInp = document.getElementById('message');
-const hourInp = document.getElementById('hour');
-const minuteInp = document.getElementById('minute');
-const saveBtn = document.getElementById('save-btn');
+const contactsList = document.getElementById("contacts-list");
+const messageInp = document.getElementById("message");
+const hourInp = document.getElementById("hour");
+const minuteInp = document.getElementById("minute");
+const ampmInp = document.getElementById("ampm");
+const saveBtn = document.getElementById("save-btn");
 
-// Debugging: Log connection status to console
-socket.on('connect', () => {
-    console.log('🔌 Connected to Railway Backend!');
-});
-
-socket.on('connect_error', (err) => {
-    console.error('❌ Connection Error:', err.message);
-});
-
-function createNumberInput(value = '', showAddButton = true) {
-    const div = document.createElement('div');
-    div.className = 'input-group';
-    div.style.display = 'flex';
-    div.style.gap = '10px';
-    div.style.marginBottom = '10px';
-    div.style.alignItems = 'center';
-
-    let cleanValue = value;
-    if (value && value.startsWith('91') && value.includes('@')) {
-        cleanValue = value.substring(2, value.indexOf('@'));
-    }
-
-    div.innerHTML = `
-        <div style="background: #DDD; border: 4px solid #000; padding: 12px; font-weight: 900; display: flex; align-items: center; min-width: 60px; justify-content: center;">+91</div>
-        <input type="text" class="phone-input" placeholder="Enter 10-digit number" value="${cleanValue}" style="flex: 1; border-width: 4px; border-color: black;">
-        <button class="add-btn" style="background: #4CD964; color: white; padding: 8px 15px; box-shadow: 4px 4px 0px var(--black); font-size: 1.2rem; font-weight: 900; margin: 0; min-width: 50px; display: ${showAddButton ? 'inline-block' : 'none'};">+</button>
-        <button class="remove-btn" style="background: var(--primary); color: white; padding: 8px 15px; box-shadow: 4px 4px 0px var(--black); font-size: 0.9rem; font-weight: 900; margin: 0; min-width: 50px;">X</button>
+function createInput(value = "", isLast = true) {
+    const row = document.createElement("div");
+    row.innerHTML = `
+        <span>+91</span>
+        <input class="phone" value="${value}">
+        <button class="add" ${isLast ? "" : "style='display:none'"}>+</button>
+        <button class="remove">X</button>
     `;
 
-    div.querySelector('.add-btn').addEventListener('click', (e) => {
-        e.preventDefault();
-        e.target.style.display = 'none';
-        createNumberInput('', true);
-    });
-
-    div.querySelector('.remove-btn').addEventListener('click', (e) => {
-        e.preventDefault();
-        const allRows = contactsList.querySelectorAll('.input-group');
-        if (allRows.length > 1) {
-            const isLast = div === allRows[allRows.length - 1];
-            div.remove();
-            if (isLast) {
-                const remainingRows = contactsList.querySelectorAll('.input-group');
-                const newLast = remainingRows[remainingRows.length - 1];
-                newLast.querySelector('.add-btn').style.display = 'inline-block';
-            }
-        } else {
-            div.querySelector('input').value = '';
-        }
-    });
-
-    contactsList.appendChild(div);
-}
-
-// Initialize with one empty input
-createNumberInput('', true);
-
-// Handle QR Code
-socket.on('qr', (data) => {
-    qrImg.src = data;
-    qrImg.style.display = 'block';
-    qrPlaceholder.style.display = 'none';
-    qrStatus.innerText = 'Scan with WhatsApp';
-    statusText.innerText = 'WAITING FOR SCAN';
-    statusBadge.className = 'status-badge status-waiting';
-});
-
-// Handle Connection Status
-socket.on('ready', () => {
-    qrImg.style.display = 'none';
-    qrPlaceholder.style.display = 'block';
-    qrPlaceholder.innerText = '✅ Authenticated';
-    qrStatus.innerText = 'WhatsApp is connected!';
-    statusText.innerText = 'CONNECTED';
-    statusBadge.className = 'status-badge status-ready';
-});
-
-socket.on('disconnected', () => {
-    statusText.innerText = 'DISCONNECTED';
-    statusBadge.className = 'status-badge status-disconnected';
-    qrStatus.innerText = 'Disconnected. Please restart.';
-});
-
-// Handle Current Configuration
-socket.on('config', (config) => {
-    if (config.contacts && config.contacts.length > 0) {
-        contactsList.innerHTML = '';
-        config.contacts.forEach((c, index) => {
-            createNumberInput(c, index === config.contacts.length - 1);
-        });
-    }
-    messageInp.value = config.message || '';
-
-    let h = config.scheduledTime?.hour ?? 8;
-    const m = config.scheduledTime?.minute ?? 0;
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12;
-    h = h ? h : 12;
-
-    hourInp.value = h;
-    minuteInp.value = m;
-    document.getElementById('ampm').value = ampm;
-});
-
-// Save Settings
-saveBtn.addEventListener('click', () => {
-    const phoneInputs = document.querySelectorAll('.phone-input');
-    const contacts = Array.from(phoneInputs)
-        .map(input => input.value.trim())
-        .filter(val => val.length > 0)
-        .map(val => `91${val}@c.us`);
-
-    let h = parseInt(hourInp.value) || 12;
-    const m = parseInt(minuteInp.value) || 0;
-    const ampm = document.getElementById('ampm').value;
-
-    if (ampm === 'PM' && h < 12) h += 12;
-    if (ampm === 'AM' && h === 12) h = 0;
-
-    const config = {
-        contacts: contacts,
-        message: messageInp.value,
-        scheduledTime: {
-            hour: h,
-            minute: m
-        }
+    row.querySelector(".add").onclick = () => {
+        row.querySelector(".add").style.display = "none";
+        createInput("", true);
     };
 
-    socket.emit('updateConfig', config);
+    row.querySelector(".remove").onclick = () => {
+        if (contactsList.children.length > 1) row.remove();
+    };
 
-    saveBtn.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-        saveBtn.style.transform = '';
-        alert('🚀 Settings synced successfully!');
-    }, 150);
+    contactsList.appendChild(row);
+}
+
+createInput();
+
+socket.on("qr", qr => {
+    qrImg.src = qr;
+    qrImg.style.display = "block";
+    qrPlaceholder.style.display = "none";
+    qrStatus.innerText = "Scan QR";
+    statusText.innerText = "WAITING";
 });
-    </script>
-</body>
 
+socket.on("ready", () => {
+    qrImg.style.display = "none";
+    qrPlaceholder.style.display = "block";
+    qrPlaceholder.innerText = "Authenticated";
+    qrStatus.innerText = "Connected";
+    statusText.innerText = "CONNECTED";
+});
+
+socket.on("config", cfg => {
+    contactsList.innerHTML = "";
+    cfg.contacts.forEach((c, i) =>
+        createInput(c.replace("91", "").replace("@c.us", ""), i === cfg.contacts.length - 1)
+    );
+
+    messageInp.value = cfg.message;
+
+    let h = cfg.scheduledTime.hour;
+    ampmInp.value = h >= 12 ? "PM" : "AM";
+    hourInp.value = h % 12 || 12;
+    minuteInp.value = cfg.scheduledTime.minute;
+});
+
+saveBtn.onclick = () => {
+    const contacts = [...document.querySelectorAll(".phone")]
+        .map(i => i.value.trim())
+        .filter(Boolean)
+        .map(n => `91${n}@c.us`);
+
+    let h = parseInt(hourInp.value);
+    if (ampmInp.value === "PM" && h < 12) h += 12;
+    if (ampmInp.value === "AM" && h === 12) h = 0;
+
+    socket.emit("updateConfig", {
+        contacts,
+        message: messageInp.value,
+        scheduledTime: { hour: h, minute: parseInt(minuteInp.value) }
+    });
+
+    alert("Saved!");
+};
+</script>
+
+</body>
 </html>
