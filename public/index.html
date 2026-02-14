@@ -1,239 +1,615 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>WhatsApp Automator</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TIMELESS WILL | NEON BRUTALIST AUTOMATION</title>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;900&display=swap');
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;900&family=Space+Grotesk:wght@300;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
-:root {
-    --bg:#f0f0f0;
-    --black:#000;
-    --white:#fff;
-    --green:#25D366;
-    --yellow:#FFD600;
-    --red:#FF3B30;
-    --border:4px;
-}
+        :root {
+            --bg: #050505;
+            --neon-green: #CCFF00;
+            --neon-pink: #FF00CC;
+            --neon-blue: #00FFFF;
+            --neon-orange: #FF9900;
+            --white: #FFFFFF;
+            --black: #000000;
+            --dark-gray: #1a1a1a;
+            --border-width: 4px;
+            --shadow-offset: 10px;
+        }
 
-*{
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-    font-family:'Public Sans',sans-serif;
-}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Space Grotesk', sans-serif;
+        }
 
-body{
-    background:var(--bg);
-    min-height:100vh;
-    padding:40px;
-    display:flex;
-    justify-content:center;
-}
+        body {
+            background-color: var(--bg);
+            background-image:
+                linear-gradient(rgba(204, 255, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(204, 255, 0, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            color: var(--white);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
 
-.container{
-    width:100%;
-    max-width:900px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:30px;
-}
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 25px;
+            margin-top: 20px;
+        }
 
-h1{
-    grid-column:1/-1;
-    font-size:3rem;
-    font-weight:900;
-    background:var(--green);
-    padding:10px 20px;
-    border:var(--border) solid var(--black);
-    box-shadow:10px 10px 0 var(--black);
-}
+        @media (max-width: 1000px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
+        }
 
-.card{
-    background:var(--white);
-    padding:20px;
-    border:var(--border) solid var(--black);
-    box-shadow:10px 10px 0 var(--black);
-}
+        header {
+            grid-column: 1 / -1;
+            width: 100%;
+            text-align: left;
+            position: relative;
+            padding-bottom: 20px;
+            border-bottom: 8px solid var(--neon-green);
+            margin-bottom: 10px;
+        }
 
-label{
-    font-weight:900;
-    margin-bottom:10px;
-    display:block;
-}
+        h1 {
+            font-family: 'Public Sans', sans-serif;
+            font-weight: 900;
+            font-size: clamp(3rem, 10vw, 6rem);
+            text-transform: uppercase;
+            line-height: 0.8;
+            letter-spacing: -4px;
+            color: var(--neon-green);
+            -webkit-text-stroke: 2px var(--black);
+            text-shadow: 8px 8px 0px var(--neon-pink);
+            margin-bottom: 15px;
+            transform: skewX(-5deg);
+            display: inline-block;
+        }
 
-input, textarea, select{
-    width:100%;
-    padding:12px;
-    border:var(--border) solid var(--black);
-    font-weight:800;
-    margin-bottom:10px;
-}
+        .subtitle-bar {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
 
-button{
-    padding:15px;
-    font-weight:900;
-    background:var(--green);
-    border:var(--border) solid var(--black);
-    cursor:pointer;
-    box-shadow:6px 6px 0 var(--black);
-}
+        .subtitle {
+            background: var(--neon-blue);
+            color: var(--black);
+            font-weight: 900;
+            padding: 5px 15px;
+            display: inline-block;
+            text-transform: uppercase;
+            font-size: 1.1rem;
+            border: 3px solid var(--black);
+            box-shadow: 4px 4px 0px var(--black);
+        }
 
-button:active{
-    transform:translate(3px,3px);
-    box-shadow:2px 2px 0 var(--black);
-}
+        .card {
+            background: var(--white);
+            border: var(--border-width) solid var(--black);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--black);
+            padding: 25px;
+            color: var(--black);
+            position: relative;
+            transition: all 0.2s;
+        }
 
-.status{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-weight:900;
-    padding:10px;
-    border:var(--border) solid var(--black);
-    margin-bottom:15px;
-}
+        .card:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: calc(var(--shadow-offset) + 3px) calc(var(--shadow-offset) + 3px) 0px var(--black);
+        }
 
-.connected{background:var(--green);}
-.waiting{background:var(--yellow);}
-.disconnected{background:var(--red);}
+        .card-qr {
+            border-color: var(--neon-pink);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--neon-pink);
+            height: fit-content;
+        }
 
-#qr{
-    max-width:100%;
-    display:none;
-}
+        .card-inputs {
+            border-color: var(--neon-green);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--neon-green);
+        }
 
-.phone-row{
-    display:flex;
-    gap:10px;
-    margin-bottom:10px;
-}
+        .card-logs {
+            grid-column: 1 / -1;
+            background: var(--dark-gray);
+            color: var(--neon-green);
+            border-color: var(--neon-blue);
+            box-shadow: var(--shadow-offset) var(--shadow-offset) 0px var(--neon-blue);
+            padding: 15px;
+            min-height: 200px;
+        }
 
-.phone-row span{
-    padding:12px;
-    border:var(--border) solid var(--black);
-    background:#ddd;
-    font-weight:900;
-}
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 4px solid var(--black);
+            padding-bottom: 8px;
+        }
 
-.phone-row button{
-    width:50px;
-}
-</style>
+        .status-label {
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 1.2rem;
+        }
+
+        #status-badge {
+            padding: 4px 12px;
+            font-weight: 900;
+            border: 3px solid var(--black);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .disconnected {
+            background: #FF3B30;
+            color: white;
+        }
+
+        .waiting {
+            background: var(--neon-orange);
+            color: black;
+        }
+
+        .connected {
+            background: var(--neon-green);
+            color: black;
+        }
+
+        .qr-display {
+            background: #eee;
+            border: 4px solid var(--black);
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #qr {
+            max-width: 90%;
+            image-rendering: pixelated;
+        }
+
+        .qr-text {
+            position: absolute;
+            font-weight: 900;
+            text-transform: uppercase;
+            background: var(--white);
+            border: 2px solid var(--black);
+            padding: 5px 10px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-5deg);
+            z-index: 2;
+        }
+
+        label {
+            display: block;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 1rem;
+            margin-bottom: 5px;
+            margin-top: 15px;
+        }
+
+        .phone-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .country-code {
+            background: #ddd;
+            border: 3px solid var(--black);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-weight: 900;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 3px solid var(--black);
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: var(--white);
+            outline: none;
+            color: var(--black);
+        }
+
+        input:focus,
+        textarea:focus {
+            background: #fdfdfd;
+            box-shadow: 4px 4px 0px var(--neon-pink);
+        }
+
+        .btn-icon {
+            border: 3px solid var(--black);
+            width: 45px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: transform 0.1s;
+        }
+
+        .btn-plus {
+            background: var(--neon-blue);
+        }
+
+        .btn-del {
+            background: #FF3B30;
+            color: white;
+        }
+
+        .btn-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-icon:active {
+            transform: scale(0.95);
+        }
+
+        .time-settings {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .action-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-main {
+            padding: 15px;
+            font-size: 1.3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            border: var(--border-width) solid var(--black);
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        #save {
+            background: var(--neon-green);
+            box-shadow: 6px 6px 0px var(--black);
+        }
+
+        #test {
+            background: var(--neon-orange);
+            box-shadow: 6px 6px 0px var(--black);
+        }
+
+        .btn-main:active {
+            transform: translate(3px, 3px);
+            box-shadow: 1px 1px 0px var(--black);
+        }
+
+        /* Logs Area */
+        .log-container {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            max-height: 250px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .log-entry {
+            display: flex;
+            gap: 10px;
+        }
+
+        .log-time {
+            color: #666;
+        }
+
+        .log-msg-success {
+            color: var(--neon-green);
+        }
+
+        .log-msg-error {
+            color: #FF3B30;
+            font-weight: 700;
+        }
+
+        .log-msg-info {
+            color: var(--neon-blue);
+        }
+
+        .log-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: var(--neon-blue);
+            border: 2px solid var(--black);
+        }
+
+        .footer-marquee {
+            width: 100vw;
+            background: var(--neon-pink);
+            color: var(--black);
+            padding: 10px 0;
+            border-top: 4px solid var(--black);
+            border-bottom: 4px solid var(--black);
+            margin-top: 40px;
+            font-weight: 900;
+            text-transform: uppercase;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+    </style>
 </head>
 
 <body>
-<div class="container">
+    <header>
+        <h1>TIMELESS WILL</h1>
+        <div class="subtitle-bar">
+            <div class="subtitle">SYSTEM_V1.1_STABLE</div>
+            <div class="subtitle" style="background: var(--neon-pink)">NEON_BRUTAL_MODE</div>
+            <div class="subtitle" style="background: var(--neon-orange)">DAILY_BROADCASTER</div>
+        </div>
+    </header>
 
-<h1>Timeless Will</h1>
+    <div class="container">
+        <!-- LEFT: QR CARD -->
+        <div class="card card-qr">
+            <div class="status-header">
+                <div class="status-label">WA_BRIDGE</div>
+                <div id="status-badge" class="disconnected">OFFLINE</div>
+            </div>
 
-<div class="card">
-    <div id="status" class="status disconnected">DISCONNECTED</div>
+            <div class="qr-display">
+                <img id="qr" style="display: none;" />
+                <div id="qrText" class="qr-text">STARTING_SYS...</div>
+            </div>
 
-    <label>WhatsApp QR</label>
-    <img id="qr" />
-    <div id="qrText">Waiting for QR…</div>
-</div>
+            <label style="margin-top: 25px;">AUTH_LOG</label>
+            <div id="auth-status-msg" style="font-weight: 700; font-size: 0.9rem;">Initializing WhatsApp module...</div>
+        </div>
 
-<div class="card">
-    <label>Contacts</label>
-    <div id="contacts"></div>
+        <!-- RIGHT: INPUTS CARD -->
+        <div class="card card-inputs">
+            <div class="status-header">
+                <div class="status-label">BROADCAST_PARAMS</div>
+                <i class="fa-solid fa-bolt"></i>
+            </div>
 
-    <label>Message</label>
-    <textarea id="message"></textarea>
+            <label>TARGET_CONTACTS</label>
+            <div id="contacts"></div>
 
-    <label>Time</label>
-    <input id="hour" type="number" min="1" max="12" placeholder="8">
-    <input id="minute" type="number" min="0" max="59" placeholder="00">
-    <select id="ampm">
-        <option>AM</option>
-        <option>PM</option>
-    </select>
+            <label>DAILY_MESSAGE_PAYLOAD</label>
+            <textarea id="message" rows="5" placeholder="System message to be broadcasted daily..."></textarea>
 
-    <button id="save">Save & Activate</button>
-</div>
+            <label>EXECUTION_WINDOW (IST)</label>
+            <div class="time-settings">
+                <div>
+                    <input id="hour" type="number" min="1" max="12" placeholder="HH">
+                </div>
+                <div>
+                    <input id="minute" type="number" min="0" max="59" placeholder="MM">
+                </div>
+                <div>
+                    <select id="ampm">
+                        <option>AM</option>
+                        <option>PM</option>
+                    </select>
+                </div>
+            </div>
 
-</div>
+            <div class="action-btns">
+                <button id="save" class="btn-main"><i class="fa-solid fa-floppy-disk"></i> SAVE_&_SYNC</button>
+                <button id="test" class="btn-main"><i class="fa-solid fa-paper-plane"></i> TEST_SEND</button>
+            </div>
+        </div>
 
-<script>
-const socket = io("https://message-scheduler-production.up.railway.app", {
-    transports:["websocket"],
-    withCredentials:true
-});
+        <!-- BOTTOM: LOGS CARD -->
+        <div class="card card-logs">
+            <div class="status-header" style="border-color: var(--neon-blue)">
+                <div class="status-label" style="color: var(--white)">SYSTEM_LIVE_LOGS</div>
+                <i class="fa-solid fa-terminal" style="color: var(--white)"></i>
+            </div>
+            <div id="log-container" class="log-container">
+                <!-- Logs will appear here -->
+                <div class="log-entry">
+                    <span class="log-time">[${new Date().toLocaleTimeString()}]</span>
+                    <span class="log-msg-info">System initialized and awaiting connection...</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-const status = document.getElementById("status");
-const qr = document.getElementById("qr");
-const qrText = document.getElementById("qrText");
-const contactsDiv = document.getElementById("contacts");
+    <div class="footer-marquee">
+        <div class="marquee-content">
+            ✦ NO_LIMITS ✦ NEON_BRUTALISM ✦ AUTOMATE_EVERYTHING ✦ TIMELESS_WILL_V1.1 ✦ RELIABLE_MESSAGING ✦
+            ✦ NO_LIMITS ✦ NEON_BRUTALISM ✦ AUTOMATE_EVERYTHING ✦ TIMELESS_WILL_V1.1 ✦ RELIABLE_MESSAGING ✦
+        </div>
+    </div>
 
-function addRow(value="", last=true){
-    const row=document.createElement("div");
-    row.className="phone-row";
-    row.innerHTML=`
-        <span>+91</span>
-        <input value="${value}">
-        <button class="add">+</button>
-        <button class="del">X</button>
-    `;
-    row.querySelector(".add").onclick=()=>{
-        row.querySelector(".add").style.display="none";
-        addRow("",true);
-    };
-    row.querySelector(".del").onclick=()=>{
-        if(contactsDiv.children.length>1)row.remove();
-    };
-    if(!last)row.querySelector(".add").style.display="none";
-    contactsDiv.appendChild(row);
-}
+    <script>
+        const socket = io("https://message-scheduler-production.up.railway.app", {
+            transports: ["websocket"],
+            withCredentials: true
+        });
 
-addRow();
+        const statusBadge = document.getElementById("status-badge");
+        const qr = document.getElementById("qr");
+        const qrText = document.getElementById("qrText");
+        const contactsDiv = document.getElementById("contacts");
+        const authMsg = document.getElementById("auth-status-msg");
+        const logContainer = document.getElementById("log-container");
 
-socket.on("qr",data=>{
-    qr.src=data;
-    qr.style.display="block";
-    qrText.innerText="Scan QR";
-    status.className="status waiting";
-    status.innerText="WAITING";
-});
+        function addLog(type, msg) {
+            const entry = document.createElement("div");
+            entry.className = "log-entry";
+            const time = new Date().toLocaleTimeString();
+            entry.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="log-msg-${type}">${msg}</span>
+            `;
+            logContainer.prepend(entry);
+        }
 
-socket.on("ready",()=>{
-    qr.style.display="none";
-    qrText.innerText="Authenticated";
-    status.className="status connected";
-    status.innerText="CONNECTED";
-});
+        function addRow(value = "", isLast = true) {
+            const row = document.createElement("div");
+            row.className = "phone-row";
+            row.innerHTML = `
+                <div class="country-code">+91</div>
+                <input type="text" value="${value}" placeholder="9876543210">
+                <button class="btn-icon btn-plus" title="Add"><i class="fa-solid fa-plus"></i></button>
+                <button class="btn-icon btn-del" title="Remove"><i class="fa-solid fa-minus"></i></button>
+            `;
 
-socket.on("config",cfg=>{
-    contactsDiv.innerHTML="";
-    cfg.contacts.forEach((c,i)=>{
-        addRow(c.replace("91","").replace("@c.us",""),i===cfg.contacts.length-1);
-    });
-    document.getElementById("message").value=cfg.message;
-});
+            const addBtn = row.querySelector(".btn-plus");
+            const delBtn = row.querySelector(".btn-del");
 
-document.getElementById("save").onclick=()=>{
-    const nums=[...contactsDiv.querySelectorAll("input")]
-        .map(i=>i.value.trim())
-        .filter(Boolean)
-        .map(n=>`91${n}@c.us`);
+            addBtn.onclick = () => {
+                addBtn.style.display = "none";
+                addRow("", true);
+            };
 
-    let h=parseInt(hour.value)||8;
-    let m=parseInt(minute.value)||0;
-    if(ampm.value==="PM" && h<12)h+=12;
-    if(ampm.value==="AM" && h===12)h=0;
+            delBtn.onclick = () => {
+                if (contactsDiv.children.length > 1) {
+                    const rowToRem = row;
+                    const wasLast = !rowToRem.nextElementSibling;
+                    rowToRem.remove();
+                    if (wasLast) {
+                        const rows = contactsDiv.querySelectorAll(".phone-row");
+                        rows[rows.length - 1].querySelector(".btn-plus").style.display = "flex";
+                    }
+                }
+            };
 
-    socket.emit("updateConfig",{
-        contacts:nums,
-        message:message.value,
-        scheduledTime:{hour:h,minute:m}
-    });
+            if (!isLast) addBtn.style.display = "none";
+            contactsDiv.appendChild(row);
+        }
 
-    alert("Saved");
-};
-</script>
+        addRow();
+
+        socket.on("qr", data => {
+            qr.src = data;
+            qr.style.display = "block";
+            qrText.style.display = "none";
+            statusBadge.className = "waiting";
+            statusBadge.innerText = "WAITING_QR";
+            authMsg.innerText = "SCAN QR CODE ON YOUR PHONE!";
+            authMsg.style.color = "var(--neon-orange)";
+        });
+
+        socket.on("ready", () => {
+            qr.style.display = "none";
+            qrText.style.display = "block";
+            qrText.innerText = "CONNECTED";
+            qrText.style.background = "var(--neon-green)";
+            statusBadge.className = "connected";
+            statusBadge.innerText = "ONLINE";
+            authMsg.innerText = "WhatsApp System Authenticated.";
+            authMsg.style.color = "var(--neon-green)";
+        });
+
+        socket.on("log", data => {
+            addLog(data.type, data.msg);
+        });
+
+        socket.on("config", cfg => {
+            contactsDiv.innerHTML = "";
+            if (cfg.contacts && cfg.contacts.length > 0) {
+                cfg.contacts.forEach((c, i) => {
+                    addRow(c.replace("91", "").replace("@c.us", ""), i === cfg.contacts.length - 1);
+                });
+            } else {
+                addRow();
+            }
+            document.getElementById("message").value = cfg.message || "";
+
+            if (cfg.scheduledTime) {
+                let h = parseInt(cfg.scheduledTime.hour);
+                let m = parseInt(cfg.scheduledTime.minute);
+                let ampm = h >= 12 ? "PM" : "AM";
+                let displayH = h % 12 || 12;
+                document.getElementById("hour").value = displayH;
+                document.getElementById("minute").value = m.toString().padStart(2, '0');
+                document.getElementById("ampm").value = ampm;
+            }
+        });
+
+        document.getElementById("save").onclick = () => {
+            const nums = [...contactsDiv.querySelectorAll("input")]
+                .map(i => i.value.trim())
+                .filter(Boolean)
+                .map(n => `91${n}@c.us`);
+
+            let h = parseInt(document.getElementById("hour").value) || 12;
+            let m = parseInt(document.getElementById("minute").value) || 0;
+            const ampm = document.getElementById("ampm").value;
+
+            if (ampm === "PM" && h < 12) h += 12;
+            if (ampm === "AM" && h === 12) h = 0;
+
+            socket.emit("updateConfig", {
+                contacts: nums,
+                message: document.getElementById("message").value,
+                scheduledTime: { hour: h, minute: m }
+            });
+            addLog("info", "Sending configuration update to server...");
+        };
+
+        document.getElementById("test").onclick = () => {
+            socket.emit("testSend");
+            addLog("info", "Requested manual test sequence.");
+        };
+    </script>
 </body>
+
 </html>
