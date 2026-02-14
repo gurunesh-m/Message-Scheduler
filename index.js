@@ -12,10 +12,22 @@ const server = http.createServer(app);
 // CHANGE THIS: Replace with your actual Netlify URL after you deploy it
 const io = new Server(server, {
     cors: {
-        origin: ["https://time-lesswill.netlify.app/", "http://localhost:3000"],
-        methods: ["GET", "POST"]
-    }
+        // EXACT match for your Netlify URL (remove any trailing /)
+        origin: "https://time-lesswill.netlify.app", 
+        methods: ["GET", "POST"],
+        allowedHeaders: ["my-custom-header"],
+        credentials: true
+    },
+    // Adding this helps prevent transport-related CORS issues
+    allowEIO3: true 
 });
+
+// Also add the general express CORS as a backup
+const cors = require('cors');
+app.use(cors({
+    origin: "https://time-lesswill.netlify.app",
+    credentials: true
+}));
 
 const PORT = process.env.PORT || 8080;
 const CONFIG_FILE = '/var/data/config.json'; // Path for Railway Persistent Disk
