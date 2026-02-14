@@ -11,6 +11,12 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 8080;
 
+// ✅ Favicon handler to stop 404 spam
+app.get("/favicon.ico", (req, res) => {
+    res.status(204).end();
+});
+
+
 app.use(cors({
     origin: "https://time-lesswill.netlify.app",
     credentials: true
