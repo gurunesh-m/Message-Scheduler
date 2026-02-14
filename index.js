@@ -49,15 +49,20 @@ if (fs.existsSync(CONFIG_FILE)) {
 }
 
 const client = new Client({
-    authStrategy: new LocalAuth({ dataPath: path.join(DATA_DIR, 'auth') }),
+    authStrategy: new LocalAuth({ 
+        dataPath: path.join(DATA_DIR, 'auth') 
+    }),
     puppeteer: {
         headless: true,
         args: [
-            '--no-sandbox', 
-            '--disable-setuid-sandbox', 
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
-            '--disable-gpu'
+            '--disable-gpu',
+            '--no-zygote',
+            '--single-process' // Helps in restricted container environments
         ],
+        // This is key: it tells Puppeteer where to find Chromium in your Docker setup
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium'
     }
 });
