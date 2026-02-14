@@ -5,32 +5,38 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
 const server = http.createServer(app);
 
-// CHANGE THIS: Replace with your actual Netlify URL after you deploy it
-const io = new Server(server, {
-    cors: {
-        // EXACT match for your Netlify URL (remove any trailing /)
-        origin: "https://time-lesswill.netlify.app", 
-        methods: ["GET", "POST"],
-        allowedHeaders: ["my-custom-header"],
-        credentials: true
-    },
-    // Adding this helps prevent transport-related CORS issues
-    allowEIO3: true 
-});
+// Use the PORT Railway gives us, or default to 8080
+const PORT = process.env.PORT || 8080;
 
-// Also add the general express CORS as a backup
-const cors = require('cors');
+// 1. APPLY GLOBAL CORS
 app.use(cors({
     origin: "https://time-lesswill.netlify.app",
     credentials: true
 }));
 
-const PORT = process.env.PORT || 8080;
-const CONFIG_FILE = '/var/data/config.json'; // Path for Railway Persistent Disk
+// 2. APPLY SOCKET.IO CORS (No trailing slash on origin!)
+const io = new Server(server, {
+    cors: {
+        origin: "https://time-lesswill.netlify.app",
+        methods: ["GET", "POST"],
+        credentials: true
+    },
+    allowEIO3: true,
+    transports: ['websocket', 'polling']
+});
+
+const DATA_DIR = '/var/data';
+const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
+
+// Ensure directory exists
+if (!fs.existsSync(DATA_DIR)) { 
+    fs.mkdirSync(DATA_DIR, { recursive: true }); 
+}
 
 let CONFIG = {
     contacts: [],
@@ -38,19 +44,21 @@ let CONFIG = {
     scheduledTime: { hour: 8, minute: 15 }
 };
 
-// Ensure data directory exists
-if (!fs.existsSync('/var/data')) { fs.mkdirSync('/var/data', { recursive: true }); }
-
-// Load config
 if (fs.existsSync(CONFIG_FILE)) {
     CONFIG = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
 }
 
 const client = new Client({
-    authStrategy: new LocalAuth({ dataPath: '/var/data/auth' }),
+    authStrategy: new LocalAuth({ dataPath: path.join(DATA_DIR, 'auth') }),
     puppeteer: {
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        args: [
+            '--no-sandbox', 
+            '--disable-setuid-sandbox', 
+            '--disable-dev-shm-usage',
+            '--disable-gpu'
+        ],
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium'
     }
 });
 
@@ -66,28 +74,23 @@ io.on('connection', (socket) => {
 });
 
 client.on('qr', async (qr) => {
-    const url = await qrcode.toDataURL(qr);
-    io.emit('qr', url);
+    try {
+        const url = await qrcode.toDataURL(qr);
+        io.emit('qr', url);
+        console.log('📤 QR Sent');
+    } catch (err) {
+        console.error('QR Error', err);
+    }
 });
 
 client.on('ready', () => {
     console.log('✅ WhatsApp Ready');
     io.emit('ready');
-    startScheduler();
 });
 
-function startScheduler() {
-    setInterval(async () => {
-        const now = new Date();
-        if (now.getHours() === CONFIG.scheduledTime.hour && now.getMinutes() === CONFIG.scheduledTime.minute) {
-            for (const contactId of CONFIG.contacts) {
-                try { await client.sendMessage(contactId, CONFIG.message); } catch (e) { console.error(e); }
-            }
-        }
-    }, 60000);
-}
-
 client.initialize();
+
+// 3. FORCE BINDING TO 0.0.0.0
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Real server listening on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
